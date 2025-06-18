@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店铺设置 - 美食外卖平台</title>
+    <link rel="stylesheet" href="css/merchant.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="logo">美食外卖 - 商家</div>
+            <div class="nav-items nav-links">
+                <a href="dashboard.html">仪表盘</a>
+                <div id="user-auth"><span>商家</span></div>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <h1>店铺设置</h1>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="shop-name">店铺名称</label>
+                    <input type="text" id="shop-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="shop-address">店铺地址</label>
+                    <input type="text" id="shop-address" required>
+                </div>
+                <div class="form-group">
+                    <label for="shop-contact">联系方式</label>
+                    <input type="text" id="shop-contact" required>
+                </div>
+                <div class="form-group">
+                    <label for="shop-logo">店铺Logo</label>
+                    <input type="file" id="shop-logo" accept="image/*">
+                </div>
+                <button type="submit" class="btn-primary">保存设置</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/merchant.js"></script>
+</body>
+</html>

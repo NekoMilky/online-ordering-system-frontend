@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐厅列表 - 美食外卖平台</title>
+    <link rel="stylesheet" href="css/customer.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="logo">美食外卖</div>
+            <div class="nav-items">
+               
+                <a href="cart.html" id="cart-btn" class="nav-item">
+                    <i class="icon-cart"></i> 购物车 (0)
+                </a>
+                
+            <a href="dashboard.html" id="cart-btn" class="nav-item">主页</a>
+                 <a href="order.html" id="orders-btn" class="nav-item">
+                     <i class="icon-orders"></i> 我的订单
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <h1>餐厅详情</h1>
+
+            <!-- 餐厅列表 -->
+            <div id="restaurants-list" class="restaurants-list">
+                <!-- 加载状态 -->
+                <div class="loading">加载中...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/customer.js"></script>
+    <script>
+    
+        // 页面加载完成后获取餐厅列表
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // 获取所有商家
+                const response = await fetch(BASE_API_URL + 'users/get_all_merchants.php');
+                const data = await response.json();
+                
+                if (response.ok && data.merchants && data.merchants.length > 0) {
+                    // 获取餐厅列表容器
+                    const restaurantsList = document.getElementById('restaurants-list');
+                    
+                    // 清空加载状态
+                    restaurantsList.innerHTML = '';
+                    
+                    // 遍历商家数据，创建餐厅卡片
+                    data.merchants.forEach((merchant, index) => {
+                        // 创建餐厅卡片
+                        const restaurantCard = document.createElement('div');
+                        restaurantCard.className = 'restaurant-card';
+                        restaurantCard.onclick = () => goToDishesPage(merchant.user_id);
+                        
+                        // 设置餐厅卡片内容
+                        restaurantCard.innerHTML = `
+                            <div class="restaurant-cover">
+                                <img src="https://picsum.photos/300/200?random=${merchant.user_id}" alt="${merchant.nick}">
+                            </div>
+                            <div class="restaurant-meta">
+                                <h2 class="restaurant-name">${merchant.nick}</h2>
+                            </div>
+                        `;
+                        
+                        // 添加到餐厅列表
+                        restaurantsList.appendChild(restaurantCard);
+                    });
+                } else {
+                    // 没有商家数据
+                    document.getElementById('restaurants-list').innerHTML = `
+                        <div class="empty">
+                            <p>暂无可用餐厅</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                // 加载失败
+                console.error('获取餐厅列表失败:', error);
+                document.getElementById('restaurants-list').innerHTML = `
+                    <div class="error">
+                        <p>加载餐厅列表失败: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+        
+
+       
+       
+        // 跳转到菜品页面
+        function goToDishesPage(restaurantId) {
+            window.location.href = `dishes.html?restaurantId=${restaurantId}`;
+        }
+    </script>
+</body>
+</html>

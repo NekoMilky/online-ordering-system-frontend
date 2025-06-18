@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>数据检测 - 美食外卖平台</title>
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <div class="app-container">
+    <nav class="navbar">
+      <div class="logo">美食外卖 - 管理</div>
+      <div class="nav-links">
+        <a href="orders.html">订单监控</a>
+        <a href="system.html">设置</a>
+        <div id="user-auth"><span>管理员</span></div>
+      </div>
+    </nav>
+    <div class="main-content">
+      <h1>数据仪表盘</h1>
+      <div class="dashboard-stats">
+        <div class="stat-card">
+          <h3>今日订单</h3>
+          <p id="today-orders">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>本月订单</h3>
+          <p id="monthly-orders">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>总销售额</h3>
+          <p id="total-sales">¥0.00</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "https://yqjtcawhning.sealosgzg.site/api/";
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (user.nick) {
+        document.getElementById('user-auth').innerHTML =
+          `<div class="user-profile"><span>登录为：${user.nick}</span></div>`;
+      }
+
+      try {
+        // 直接获取所有订单数据
+        const resOrders = await fetch(BASE_URL + 'orders/get_order_by_admin.php');
+        if (!resOrders.ok) {
+          throw new Error('获取订单数据失败');
+        }
+
+        const orderData = await resOrders.json();
+        const orders = Array.isArray(orderData.orders) ? orderData.orders : [];
+
+        let todayCount = 0;
+        let monthCount = 0;
+        let totalSales = 0;
+
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        for (const order of orders) {
+          // 直接使用 order_time 字符串（格式为 'YYYY-MM-DD HH:MM:SS'）
+          const orderTimeStr = order.order_time;
+          if (!orderTimeStr) {
+            console.warn(`订单 ${order.order_id} 缺失时间`);
+            continue;
+          }
+
+          // 解析为 Date 对象
+          const orderDate = new Date(orderTimeStr);
+          if (isNaN(orderDate.getTime())) {
+            console.warn(`订单 ${order.order_id} 时间格式无效: ${orderTimeStr}`);
+            continue;
+          }
+
+          // 提取日期部分（YYYY-MM-DD）
+          const orderDateStr = orderTimeStr.split(' ')[0];
+
+          // 检查是否为今日订单
+          if (orderDateStr === todayStr) {
+            todayCount++;
+          }
+
+          // 检查是否为本月订单
+          if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+            monthCount++;
+          }
+
+          // 累加销售额
+          const price = parseFloat(order.total_price || 0);
+          totalSales += price;
+        }
+
+        // 更新页面显示
+        document.getElementById('today-orders').textContent = todayCount;
+        document.getElementById('monthly-orders').textContent = monthCount;
+        document.getElementById('total-sales').textContent = '¥' + totalSales.toFixed(2);
+
+      } catch (err) {
+      }
+    });
+  </script>
+</body>
+</html>

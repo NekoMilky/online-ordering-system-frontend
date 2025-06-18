@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>系统设置 - 美食外卖平台</title>
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <div class="app-container">
+    <nav class="navbar">
+      <div class="logo">美食外卖 - 管理</div>
+      <div class="nav-links">
+        <a href="dashboard.html">仪表盘</a>
+        <div id="user-auth"><span>管理员</span></div>
+      </div>
+    </nav>
+    <div class="main-content">
+      <h1>设置</h1>
+      <form id="system-settings-form">
+        <div class="form-group">
+          <label for="platform-name">昵称</label>
+          <input type="text" id="platform-name" required />
+        </div>
+        <div class="form-group">
+          <label for="contact-info">联系方式</label>
+          <input type="text" id="contact-info" required />
+        </div>
+        <button type="submit" class="btn-primary">保存设置</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const BASE_API_URL = 'https://yqjtcawhning.sealosgzg.site/api/';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (user.nick) {
+        document.getElementById('user-auth').innerHTML =
+          `<div class="user-profile"><span>登录为：${user.nick}</span></div>`;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('user_id', user.user_id);
+
+        const res = await fetch(BASE_API_URL + 'users/get.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data?.user) {
+          document.getElementById('platform-name').value = data.user.nick || '';
+          document.getElementById('contact-info').value = data.user.phone || '';
+        }
+      } catch (err) {
+        console.error('获取设置失败：', err);
+        alert('加载系统设置失败');
+      }
+    });
+
+    document.getElementById('system-settings-form').addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const platformName = document.getElementById('platform-name').value.trim();
+      const contactInfo = document.getElementById('contact-info').value.trim();
+
+      if (!platformName || !contactInfo) return alert('请填写所有字段');
+
+      const formData = new FormData();
+      formData.append('user_id', user.user_id);
+      formData.append('nick', platformName);    // 作为平台名
+      formData.append('phone', contactInfo);    // 作为联系方式
+
+      try {
+        const res = await fetch(BASE_API_URL + 'users/update.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await res.json();
+        if (result.message?.includes('成功')) {
+          alert('设置已保存');
+          // 更新顶部显示的昵称
+          document.getElementById('user-auth').textContent = platformName;
+          // 同步更新 localStorage
+          const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+          user.nick = platformName;
+          localStorage.setItem('currentUser', JSON.stringify(user));
+        } else {
+          alert('保存失败：' + result.message);
+        }
+      } catch (err) {
+        console.error('保存失败：', err);
+        alert('保存设置出错');
+      }
+    });
+  </script>
+</body>
+</html>

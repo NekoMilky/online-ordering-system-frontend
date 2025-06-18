@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美食外卖平台</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: '微软雅黑', sans-serif;
+      background: #fffaf0;
+      color: #333;
+    }
+
+    .navbar {
+      background: #ff6b6b;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #e04e4e;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-items {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .auth-button {
+      color: white;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 6px 12px;
+      text-decoration: none;
+    }
+
+    .auth-button:hover {
+      text-decoration: underline;
+    }
+
+    .main-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .hero-section {
+      max-width: 800px;
+      text-align: center;
+    }
+
+    .hero-section h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-section p {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    .cta-button {
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .cta-button:hover {
+      background-color: #e05e5e;
+    }
+
+    .feature-section {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .feature-item {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      width: 200px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .feature-item h3 {
+      color: #ff6b6b;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-item p {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <nav class="navbar">
+      <div class="logo">
+        <img src="images/logo.png" alt="logo" style="width: 50px;" />
+        <span>美食外卖</span>
+      </div>
+      <div class="nav-items" id="user-auth">
+        <!-- 登录/注册/用户中心 按钮将通过 JS 加载 -->
+      </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="hero-section" id="hero-section">
+        </div>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const userData = localStorage.getItem('currentUser');
+    const userAuthElement = document.getElementById('user-auth');
+    const heroSection = document.getElementById('hero-section');
+
+    if (userData) {
+      const user = JSON.parse(userData);
+      // 已登录用户的导航栏
+      userAuthElement.innerHTML = `
+        <span style="color: white;">您好，${user.nick}</span>
+        <a href="customer/profile.html" class="auth-button">用户中心</a>
+        <a href="#" class="auth-button" id="logout-btn">退出</a>
+      `;
+
+      // 已登录用户的主页内容
+      heroSection.innerHTML = `
+        <h1>欢迎回来，${user.nick}</h1>
+        <p>今天想吃什么？立即开始点餐吧！</p>
+        <a href="customer/dashboard.html" class="cta-button">开始点餐</a>
+
+        <div class="feature-section">
+          <div class="feature-item">
+            <h3>快速配送</h3>
+            <p>30 分钟内送达</p>
+          </div>
+          <div class="feature-item">
+            <h3>优质美食</h3>
+            <p>精选商家，品质保证</p>
+          </div>
+          <div class="feature-item">
+            <h3>便捷下单</h3>
+            <p>简单操作，轻松订餐</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('currentUser');
+        alert('您已退出登录');
+        window.location.reload();
+      });
+    } else {
+      // 未登录用户的主页内容
+      userAuthElement.innerHTML = `
+        <a href="login/login.html" class="auth-button">登录</a>
+        <a href="login/register.html" class="auth-button">注册</a>
+      `;
+
+      heroSection.innerHTML = `
+        <h1>欢迎来到美食外卖平台</h1>
+        <p>海量美食，随叫随到。请登录或注册以开始点餐。</p>
+        <a href="login/login.html" class="cta-button">立即登录</a>
+
+        <div class="feature-section">
+          <div class="feature-item">
+            <h3>快速配送</h3>
+            <p>30 分钟内送达</p>
+          </div>
+          <div class="feature-item">
+            <h3>优质美食</h3>
+            <p>精选商家，品质保证</p>
+          </div>
+          <div class="feature-item">
+            <h3>便捷下单</h3>
+            <p>简单操作，轻松订餐</p>
+          </div>
+        </div>
+      `;
+    }
+  });
+</script>
+</body>
+
+</html>

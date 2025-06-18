@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>订单 - 美食外卖平台</title>
+  <link rel="stylesheet" href="css/customer.css" />
+  <style>
+    .order-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .order-status {
+      font-weight: bold;
+    }
+    .order-status.completed {
+      color: green;
+    }
+    .order-status.processing {
+      color: orange;
+    }
+    .order-details {
+      font-size: 14px;
+      color: #555;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+    .loading, .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 16px;
+    }
+    .error {
+      text-align: center;
+      padding: 20px;
+      color: #d9534f;
+    }
+    .retry-btn {
+      margin-top: 15px;
+      padding: 8px 20px;
+      background: #f60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tab-buttons {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+    }
+    .tab-button {
+      padding: 10px 20px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    .tab-button.active {
+      background: #f60;
+      color: white;
+      border-color: #f60;
+    }
+    .dish-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      padding: 5px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="logo">美食外卖</div>
+      <div class="nav-items">
+        <div id="user-auth"></div>
+        <div id="cart-btn" class="nav-item nav-links">
+          <a href="dashboard.html" id="cart-btn" class="nav-item">主页</a>
+          <a href="profile.html" class="nav-item">个人中心</a>
+          <a href="cart.html" class="cart-link"><i class="icon-cart"></i> 购物车 (<span id="cart-count">0</span>)</a>
+        </div>
+      </div>
+    </nav>
+  <div class="app-container">
+    <div class="main-content">
+      <div class="tab-buttons">
+        <button class="tab-button active" data-tab="active">进行中订单</button>
+        <button class="tab-button" data-tab="history">历史订单</button>
+      </div>
+
+      <div id="active-orders" class="orders-list"></div>
+      <div id="history-orders" class="orders-list" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_API_URL = 'https://yqjtcawhning.sealosgzg.site/api/';
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const customerId = currentUser.user_id || localStorage.getItem('user_id') || null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('页面加载完成，当前用户:', currentUser);
+      displayUsername();
+      updateCartCount();
+      initTabSwitch();
+
+      // 处理从结算页面跳转过来的情况
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('from') === 'checkout') {
+        console.log('从结算页面跳转，自动加载进行中订单');
+        document.querySelector('[data-tab="active"]').click();
+      } else {
+        loadOrders('active');
+      }
+    });
+
+    function displayUsername() {
+      const userAuthElement = document.getElementById('user-auth');
+      if (userAuthElement && currentUser.username) {
+        userAuthElement.innerHTML = `<div class="user-profile"><span>${currentUser.username}</span></div>`;
+      }
+    }
+
+    async function updateCartCount() {
+      const countElem = document.getElementById('cart-count');
+      if (!customerId || !countElem) {
+        console.log('未登录或缺少购物车元素');
+        return;
+      }
+      
+      try {
+        const formData = new FormData();
+        formData.append('customer_id', customerId);
+        const res = await fetch(BASE_API_URL + 'carts/get_cart_by_customer.php', { 
+          method: 'POST', 
+          body: formData 
+        });
+        
+        if (!res.ok) throw new Error('请求失败');
+        
+        const data = await res.json();
+        console.log('购物车数据:', data);
+        
+        let count = 0;
+        (data.carts || []).forEach(c => count += parseInt(c.count || 0));
+        countElem.textContent = count;
+      } catch (error) {
+        console.error('更新购物车数量失败:', error);
+        countElem.textContent = '0';
+      }
+    }
+
+    function initTabSwitch() {
+      const tabs = document.querySelectorAll('.tab-button');
+      tabs.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // 更新按钮激活状态
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          
+          const tab = this.dataset.tab;
+          console.log('切换标签:', tab);
+          
+          // 切换内容显示
+          document.getElementById('active-orders').style.display = tab === 'active' ? 'block' : 'none';
+          document.getElementById('history-orders').style.display = tab === 'history' ? 'block' : 'none';
+          
+          // 加载数据
+          loadOrders(tab);
+        });
+      });
+    }
+
+async function loadOrders(type) {
+  console.log(`开始加载订单，类型: ${type}`);
+  const container = document.getElementById(type === 'active' ? 'active-orders' : 'history-orders');
+  container.innerHTML = '<div class="loading">加载中...</div>';
+
+  if (!customerId) {
+    container.innerHTML = '<div class="error">请先<a href="login.html">登录</a>查看订单</div>';
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('customer_id', customerId);
+    
+    const startTime = Date.now();
+    const res = await fetch(BASE_API_URL + 'orders/get_order_by_customer.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!res.ok) {
+      throw new Error(`请求失败: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    console.log(`订单数据加载完成，耗时: ${Date.now() - startTime}ms`, data);
+    
+    // 处理不同API响应格式
+    const orders = Array.isArray(data.orders) ? data.orders : 
+                  Array.isArray(data) ? data : [];
+    
+    if (orders.length === 0) {
+      console.log('未找到订单数据');
+      container.innerHTML = `<div class="empty">暂无${type === 'active' ? '进行中' : '历史'}订单</div>`;
+      return;
+    }
+    
+    console.log('原始订单数据:', orders);
+    
+    // 过滤订单
+    const filtered = orders.filter(order => {
+      const status = parseInt(order.status || 0);
+      return type === 'active' ? status < 2 : status === 2;
+    });
+    
+    console.log('过滤后订单:', filtered);
+    
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty">暂无${type === 'active' ? '进行中' : '历史'}订单</div>`;
+      return;
+    }
+    
+    // 按时间降序排序
+    filtered.sort((a, b) => {
+      const timeA = parseTime(a.order_time);
+      const timeB = parseTime(b.order_time);
+      return timeB - timeA;
+    });
+    
+    // 渲染订单列表
+    container.innerHTML = ''; // 清空容器
+    for (const order of filtered) {
+      try {
+        const orderWithDishes = await getOrderDetails(order);
+        container.insertAdjacentHTML('beforeend', renderOrderCard(orderWithDishes));
+      } catch (err) {
+        console.error('获取订单详情失败:', err);
+        container.insertAdjacentHTML('beforeend', renderOrderCard(order));
+      }
+    }
+    
+    // 绑定确认按钮事件
+    bindConfirmButtons();
+    
+  } catch (err) {
+    console.error('加载订单失败:', err);
+    container.innerHTML = `
+      <div class="error">
+        <p>加载订单失败: ${err.message}</p>
+        <button onclick="loadOrders('${type}')" class="retry-btn">点击重试</button>
+      </div>
+    `;
+  }
+}
+
+function bindConfirmButtons() {
+  document.querySelectorAll('.confirm-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const orderId = this.dataset.orderId;
+      if (!orderId) return;
+
+      if (confirm('确定要确认收货吗？')) {
+        try {
+          const success = await updateOrderStatus(orderId, 2);
+          if (success) {
+            alert('订单已完成！');
+            loadOrders('active'); // 刷新订单列表
+          }
+        } catch (error) {
+          alert('操作失败: ' + error.message);
+        }
+      }
+    });
+  });
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', newStatus);
+
+    const res = await fetch(BASE_API_URL + 'orders/update_status.php', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) {
+      throw new Error('更新状态失败');
+    }
+
+    const data = await res.json();
+    return data.success || false;
+  } catch (error) {
+    console.error('更新订单状态失败:', error);
+    throw error;
+  }
+}
+
+function renderOrderCard(order) {
+  const orderId = order.order_id || order.id || '未知';
+  const address = order.address || '未提供地址';
+  const total = parseFloat(order.total_price || 0).toFixed(2);
+  const status = parseInt(order.status || 0);
+  const date = order.order_time;
+  const dishes = order.dishes || [];
+  
+  // 添加确认收货按钮（仅状态为1时显示）
+  const confirmButton = status === 1 ? `
+    <button class="confirm-btn" data-order-id="${orderId}" 
+            style="margin-top: 10px; padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      确认收货
+    </button>
+  ` : '';
+
+  return `
+    <div class="order-card">
+      <div class="order-header">
+        <span class="order-id">订单号: #${orderId}</span>
+        <span class="order-date">${date}</span>
+        <span class="order-status ${status === 2 ? 'completed' : 'processing'}">
+          ${getOrderStatusText(status)}
+        </span>
+      </div>
+      <div class="order-details">
+        <p><strong>地址：</strong>${address}</p>
+        ${dishes.length > 0 ? `
+          <div style="margin: 10px 0;">
+            <strong>菜品：</strong>
+            ${dishes.map(dish => `
+              <div class="dish-item">
+                <span>${dish.name || '未知菜品'} × ${dish.count || 1}</span>
+                <span>¥${(parseFloat(dish.price || 0) * parseInt(dish.count || 1)).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <p><strong>总价：</strong>¥${total}</p>
+        ${confirmButton}
+      </div>
+    </div>
+  `;
+}
+
+    function parseTime(timestamp) {
+      if (!timestamp) return 0;
+      
+      // 如果是字符串时间格式
+      if (typeof timestamp === 'string' && timestamp.includes('-')) {
+        return new Date(timestamp).getTime();
+      }
+      
+      // 如果是秒级时间戳
+      if (timestamp.toString().length <= 10) {
+        return timestamp * 1000;
+      }
+      
+      // 默认按毫秒处理
+      return parseInt(timestamp);
+    }
+
+    function formatDate(timestamp) {
+      const time = parseTime(timestamp);
+      if (!time) return '未知时间';
+      
+      const d = new Date(time);
+      return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    function getOrderStatusText(status) {
+      const statusNum = parseInt(status || 0);
+      switch (statusNum) {
+        case 0: return '待商家接单';
+        case 1: return '进行中';
+        case 2: return '已完成';
+        default: return `未知状态(${status})`;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+/* 基础样式 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 导航栏样式 */
+.navbar {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-items, .user-profile {
+    display: flex;
+    align-items: center;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    margin-left: 2rem;
+}
+
+.nav-menu li {
+    margin-left: 1.5rem;
+}
+
+.nav-menu a, .btn-primary, .btn-action {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.nav-links a:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* 按钮通用样式 */
+.btn-primary, .btn-action {
+    background-color: #ff6b6b;
+    border: none;
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: #ff5252;
+}
+
+/* 主内容区 */
+.main-content {
+    padding: 2rem;
+    flex: 1;
+}
+
+.main-content h1 {
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #ff6b6b;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+/* 卡片通用样式 */
+.stat-card, .order-item, .restaurant-card, .action-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.stat-card, .action-card {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-card:hover, .order-item:hover, .restaurant-card:hover, .action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 仪表盘统计卡片 */
+.dashboard-stats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+.stat-card {
+    width: calc(33% - 1rem);
+}
+
+.stat-card h3 {
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.stat-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ff6b6b;
+}
+
+/* 表单样式 */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* 表格样式 */
+.dishes-list {
+    margin-top: 2rem;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #ff6b6b;
+    color: white;
+    font-weight: bold;
+}
+
+tr:hover {
+    background-color: #fff9f9;
+}
+
+.dish-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* 按钮颜色变体 */
+.btn-edit, .btn-accept {
+    background-color: #4CAF50;
+}
+
+.btn-delete, .btn-reject {
+    background-color: #f44336;
+}
+
+.btn-edit, .btn-delete, .btn-accept, .btn-reject {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    color: white;
+}
+
+/* 订单通用样式 */
+.order-items {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.order-item {
+    padding: 1.5rem;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.order-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* 订单状态颜色 */
+.order-status.pending {
+    background-color: #FFF3E0;
+    color: #FFA000;
+}
+
+.order-status.processing {
+    background-color: #E3F2FD;
+    color: #1976D2;
+}
+
+.order-status.completed {
+    background-color: #E8F5E9;
+    color: #388E3C;
+}
+
+.order-status.rejected {
+    background-color: #FFEBEE;
+    color: #D32F2F;
+}
+
+.order-details {
+    display: flex;
+    justify-content: space-between;
+}
+
+.order-dishes {
+    flex: 2;
+}
+
+.dish-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.order-summary {
+    flex: 1;
+    padding-left: 1rem;
+    border-left: 1px solid #eee;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.order-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .dashboard-stats, .order-details {
+        flex-direction: column;
+    }
+    
+    .stat-card {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .order-summary {
+        padding-left: 0;
+        border-left: none;
+        margin-top: 1rem;
+    }
+    
+    .nav-menu {
+        display: none;
+    }
+}
+
+/* 新增通用类 */
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.2);
+}
+
+.no-orders {
+    padding: 40px;
+    text-align: center;
+    color: #666;
+    font-size: 1.1rem;
+}

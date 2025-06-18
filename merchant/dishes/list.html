@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>菜品管理 - 美食外卖平台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "微软雅黑", sans-serif; }
+    body { background-color: #f9f9f9; }
+    .app-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .navbar {
+      background-color: #ff6b6b;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo { font-size: 1.5rem; font-weight: bold; }
+    .nav-items .user-profile { font-size: 1rem; }
+    h1 { margin: 20px 0; color: #333; }
+    .btn-primary {
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background-color: #e05e5e; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td {
+      padding: 12px;
+      border: 1px solid #eee;
+      text-align: center;
+    }
+    th { background-color: #f2f2f2; }
+    .dish-thumb {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    button.delete-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.delete-btn:hover {
+      background-color: #c0392b;
+    }
+    /* 删除修改按钮样式 */
+    button.modify-btn {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.modify-btn:hover {
+      background-color: #219a52;
+    }
+
+    /* 添加模态框样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+  
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+    }
+  
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+  
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .nav-links {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.nav-links a:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+  </style>
+    
+    <!-- 模态框 -->
+    <div id="modifyModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>修改菜品</h2>
+        <form id="modify-dish-form">
+          <input type="hidden" id="modify-dish-id">
+          <div class="form-group">
+            <label for="modify-dish-name">菜品名称</label>
+            <input type="text" id="modify-dish-name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="modify-dish-price">价格（元）</label>
+            <input type="number" id="modify-dish-price" name="price" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="modify-dish-description">描述</label>
+            <textarea id="modify-dish-description" name="description" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="modify-dish-image">上传图片</label>
+            <input type="file" id="modify-dish-image" name="image" accept="image/*" />
+          </div>
+          <button type="submit" class="btn-primary">提交修改</button>
+        </form>
+      </div>
+    </div>
+  </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="logo">美食外卖 - 商家</div>
+      <div class="nav-items nav-links">
+        <a href="../dashboard.html">仪表盘</a>
+        <div id="user-auth"></div>
+      </div>
+    </nav>
+  <div class="app-container">
+    <div class="main-content">
+      <h1>菜品管理</h1>
+      <button id="add-dish-btn" class="btn-primary">添加新菜品</button>
+      <div class="dishes-list">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>图片</th>
+              <th>名称</th>
+              <th>价格</th>
+              <th>描述</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="dishes-table-body">
+            <!-- 动态加载菜品 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_API_URL = 'https://yqjtcawhning.sealosgzg.site/api/';
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const merchantId = currentUser.user_id;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      displayMerchantUser();
+      loadDishList();
+
+      document.getElementById('add-dish-btn').addEventListener('click', () => {
+        window.location.href = './add.html';
+      });
+    });
+
+    function displayMerchantUser() {
+      const authElem = document.getElementById('user-auth');
+      if (authElem && currentUser.nick) {
+        authElem.innerHTML = `<div class="user-profile">登录为：${currentUser.nick}</div>`;
+      }
+    }
+
+    // 打开模态框
+    function openModifyModal(dish) {
+      const modal = document.getElementById('modifyModal');
+      document.getElementById('modify-dish-id').value = dish.dish_id;
+      document.getElementById('modify-dish-name').value = dish.name;
+      document.getElementById('modify-dish-price').value = dish.price;
+      document.getElementById('modify-dish-description').value = dish.description;
+      modal.style.display = 'block';
+    }
+
+    // 关闭模态框
+    const span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+      const modal = document.getElementById('modifyModal');
+      modal.style.display = 'none';
+    }
+
+    // 监听窗口点击事件关闭模态框
+    window.onclick = function(event) {
+      const modal = document.getElementById('modifyModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // 监听表单提交事件
+    document.getElementById('modify-dish-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('dish_id', document.getElementById('modify-dish-id').value);
+      formData.append('name', document.getElementById('modify-dish-name').value);
+      formData.append('description', document.getElementById('modify-dish-description').value);
+      const image = document.getElementById('modify-dish-image').files[0];
+      if (image) {
+        formData.append('image', image);
+      }
+      formData.append('price', document.getElementById('modify-dish-price').value);
+
+      await modifyDish(formData);
+      const modal = document.getElementById('modifyModal');
+      modal.style.display = 'none';
+    });
+
+    // 修改 loadDishList 函数，移除修改按钮
+    async function loadDishList() {
+      const tbody = document.getElementById('dishes-table-body');
+      tbody.innerHTML = '<tr><td colspan="6">加载中...</td></tr>';
+
+      const formData = new FormData();
+      formData.append('merchant_id', merchantId);
+
+      try {
+        const res = await fetch(BASE_API_URL + 'dishes/get_dish_by_merchant.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        const dishes = data.dishes || [];
+
+        if (dishes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6">暂无菜品</td></tr>';
+          return;
+        }
+
+        // 移除修改按钮
+        tbody.innerHTML = dishes.map(dish => `
+          <tr>
+            <td>${dish.dish_id}</td>
+            <td><img src="${dish.image_url || 'https://via.placeholder.com/60'}" class="dish-thumb" alt="菜品图"></td>
+            <td>${dish.name}</td>
+            <td>¥${parseFloat(dish.price).toFixed(2)}</td>
+            <td>${dish.description || ''}</td>
+            <td>
+              <button class="delete-btn" onclick="deleteDish(${dish.dish_id})">删除</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6">加载失败：${err.message}</td></tr>`;
+      }
+    }
+
+    async function deleteDish(dishId) {
+      if (!confirm('确认要删除这道菜品吗？')) return;
+
+      const formData = new FormData();
+      formData.append('dish_id', dishId);
+
+      try {
+        const res = await fetch(BASE_API_URL + 'dishes/delete.php', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('删除成功');
+          loadDishList();
+        } else {
+          alert('删除失败：' + data.message);
+        }
+      } catch (err) {
+        alert('请求失败：' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>菜品浏览 - 美食外卖平台</title>
+  <link rel="stylesheet" href="css/customer.css" />
+</head>
+<body>
+  <div class="app-container">
+    <nav class="navbar">
+      <div class="logo">美食外卖</div>
+      <div class="nav-items">
+        <div id="user-auth">
+        </div>
+        <a href="dashboard.html" id="cart-btn" class="nav-item">主页</a>
+        <a href="cart.html" id="cart-btn" class="nav-item">
+          <i class="icon-cart"></i> 购物车 (<span id="cart-count">0</span>)
+        </a>
+        <a href="order.html" class="nav-item">
+          <i class="icon-orders"></i> 我的订单
+        </a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <a href="restaurants.html" class="back-button">← 返回餐厅列表</a>
+      <h1>菜品浏览</h1>
+      <div id="dishes-list" class="dishes-list">
+        <div class="loading">加载中...</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const BASE_API_URL = 'https://yqjtcawhning.sealosgzg.site/api/';
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const customerId = currentUser.user_id;
+    const merchantId = new URLSearchParams(window.location.search).get('restaurantId');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDishes();
+      updateCartCount();
+    });
+
+    // 加载菜品列表
+    async function loadDishes() {
+      const dishesList = document.getElementById('dishes-list');
+
+      if (!merchantId) {
+        dishesList.innerHTML = '<div class="error">缺少商家ID参数</div>';
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('merchant_id', merchantId);
+        const res = await fetch(BASE_API_URL + 'dishes/get_dish_by_merchant.php', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.dishes || data.dishes.length === 0) {
+          dishesList.innerHTML = '<div class="empty">该商家暂无菜品</div>';
+          return;
+        }
+
+        dishesList.innerHTML = data.dishes.map(dish => `
+          <div class="dish-card" data-dish-id="${dish.dish_id}">
+            <img src="${dish.image_url || 'https://picsum.photos/300/200?random=' + dish.dish_id}" alt="${dish.name}">
+            <div class="dish-info">
+              <h3>${dish.name}</h3>
+              <p class="price">¥${dish.price.toFixed(2)}</p>
+              <p class="description">${dish.description || '暂无描述'}</p>
+              <button class="add-to-cart" onclick="addToCart(${dish.dish_id}, ${dish.price})">加入购物车</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        dishesList.innerHTML = `<div class="error">加载失败: ${err.message}</div>`;
+      }
+    }
+
+    // 加入购物车
+    async function addToCart(dishId, price) {
+      if (!customerId) {
+        alert('请先登录再添加购物车');
+        window.location.href = '../login/login.html';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('customer_id', customerId);
+      formData.append('merchant_id', parseInt(merchantId));
+      formData.append('dish_id', dishId);
+      formData.append('count', 1);
+      formData.append('total_price', price);
+
+      try {
+        const res = await fetch(BASE_API_URL + 'carts/create.php', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('已加入购物车');
+          updateCartCount();
+        } else {
+          throw new Error(data.message || '加入购物车失败');
+        }
+      } catch (err) {
+        alert('添加失败: ' + err.message);
+      }
+    }
+
+    // 更新购物车数量
+    async function updateCartCount() {
+      if (!customerId) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('customer_id', customerId);
+
+        const res = await fetch(BASE_API_URL + 'carts/get_cart_by_customer.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        const count = res.ok && data.carts ? data.carts.length : 0;
+        document.getElementById('cart-count').innerText = count;
+      } catch (err) {
+        console.error('获取购物车失败:', err.message);
+        document.getElementById('cart-count').innerText = '0';
+      }
+    }
+  </script>
+</body>
+</html>

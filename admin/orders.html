@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>订单监控 - 美食外卖平台</title>
+  <link rel="stylesheet" href="css/admin.css" />
+  
+</head>
+<body>
+  <div class="app-container">
+    <nav class="navbar">
+      <div class="logo">美食外卖 - 管理</div>
+      <div class="nav-links">
+        <a href="dashboard.html">仪表盘</a>
+        <div id="user-auth"><span>管理员</span></div>
+      </div>
+    </nav>
+    <div class="main-content">
+      <h1>订单监控</h1>
+      <div class="order-tabs">
+        <div class="tab active" data-status="all">全部</div>
+        <div class="tab" data-status="pending">待接单</div>
+        <div class="tab" data-status="processing">进行中</div>
+        <div class="tab" data-status="completed">已完成</div>
+      </div>
+      <div class="order-items" id="order-items-container">
+        <!-- 动态加载订单列表 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "https://yqjtcawhning.sealosgzg.site/api/";
+    let allOrders = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (user.nick) {
+        document.getElementById('user-auth').innerHTML =
+          `<div class="user-profile"><span>登录为：${user.nick}</span></div>`;
+      }
+      await loadAllOrders();
+      renderOrders('all');
+    });
+
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('tab')) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        e.target.classList.add('active');
+        renderOrders(e.target.dataset.status);
+      }
+    });
+
+    async function loadAllOrders() {
+      try {
+        const resMerchants = await fetch(BASE_URL + 'users/get_all_merchants.php');
+        const { merchants = [] } = await resMerchants.json();
+
+        allOrders = [];
+        for (const merchant of merchants) {
+          const formData = new FormData();
+          formData.append('merchant_id', merchant.user_id);
+
+          try {
+            const res = await fetch(BASE_URL + 'orders/get_order_by_merchant.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            const orders = Array.isArray(data.orders) ? data.orders : [];
+            orders.forEach(o => allOrders.push({ ...o, merchant_name: merchant.nick }));
+          } catch (err) {
+            console.error(`商家 ${merchant.user_id} 订单加载失败:`, err);
+          }
+        }
+      } catch (err) {
+        console.error("加载商家列表失败：", err);
+        alert("无法加载订单数据");
+      }
+    }
+
+    function renderOrders(filterStatus) {
+      const container = document.getElementById('order-items-container');
+      container.innerHTML = '';
+
+      let filtered = allOrders;
+      if (filterStatus === 'pending')      filtered = filtered.filter(o => o.status == 0);
+      else if (filterStatus === 'processing') filtered = filtered.filter(o => o.status == 1);
+      else if (filterStatus === 'completed')  filtered = filtered.filter(o => o.status == 2);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p>暂无该类订单</p>';
+        return;
+      }
+
+      filtered.forEach(order => {
+        const statusText  = getStatusText(order.status);
+        const statusClass = getStatusClass(order.status);
+        const timeStr     = formatDate(order.order_time);
+
+        container.insertAdjacentHTML('beforeend', `
+          <div class="order-item">
+            <div class="order-header">
+              订单号：#${order.order_id} ｜ 商家：${order.merchant_name}
+              <span class="order-status ${statusClass}" style="float:right">${statusText}</span>
+            </div>
+            <div>下单时间：${timeStr}</div>
+            <div>送达地址：${order.address}</div>
+            <div>总价：¥${parseFloat(order.total_price).toFixed(2)}</div>
+          </div>
+        `);
+      });
+    }
+
+    function formatDate(ts) {
+      let d = new Date(ts * 1000);
+      if (isNaN(d)) d = new Date(ts);
+      if (isNaN(d)) return '未知时间';
+
+      const Y = d.getFullYear();
+      const M = String(d.getMonth()+1).padStart(2,'0');
+      const D = String(d.getDate()).padStart(2,'0');
+      const h = String(d.getHours()).padStart(2,'0');
+      const m = String(d.getMinutes()).padStart(2,'0');
+      return `${Y}-${M}-${D} ${h}:${m}`;
+    }
+
+    function getStatusText(status) {
+      return { 0: '待商家接单', 1: '进行中', 2: '已完成'}[status] || '未知';
+    }
+    function getStatusClass(status) {
+      return { 0: 'pending', 1: 'processing', 2: 'completed', 3: 'completed' }[status] || '';
+    }
+  </script>
+</body>
+</html>

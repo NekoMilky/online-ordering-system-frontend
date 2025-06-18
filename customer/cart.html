@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>购物车 - 美食外卖平台</title>
+  <link rel="stylesheet" href="css/customer.css" />
+  <style>
+    .cart-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .cart-card button {
+      padding: 4px 10px;
+      margin: 0 5px;
+      font-size: 14px;
+    }
+    .checkout-btn {
+      padding: 10px 20px;
+      background-color: #f60;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="logo">美食外卖</div>
+      <div class="nav-items nav-links">
+        <a href="dashboard.html" class="nav-item">主页</a>
+        <a href="profile.html" class="nav-item">个人中心</a>
+        <a href="order.html" class="nav-item">我的订单</a>
+      </div>
+    </nav>
+  <div class="app-container">
+    <div class="main-content">
+      <h1>我的购物车</h1>
+      <div id="cart-items"></div>
+
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>总计：</span>
+          <span id="total-price">¥0.00</span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()">去结算</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_API = "https://yqjtcawhning.sealosgzg.site/api/";
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const customerId  = currentUser.user_id;
+    let cartData = [];
+
+    async function loadCart() {
+      if (!customerId) { alert("请先登录！"); return; }
+
+      const fd = new FormData();
+      fd.append("customer_id", customerId);
+
+      try {
+        const res    = await fetch(BASE_API + "carts/get_cart_by_customer.php", { method:"POST", body:fd });
+        const json   = await res.json();
+        cartData     = json.carts || [];
+
+        const wrap   = document.getElementById("cart-items");
+        wrap.innerHTML = "";
+        let total = 0, totalCount = 0;
+
+        if (cartData.length === 0) {
+          wrap.innerHTML = "<p>购物车为空</p>";
+          document.getElementById("total-price").innerText = "¥0.00";
+          return;
+        }
+
+        cartData.forEach(item => {
+          const unitPrice = parseFloat(item.total_price) / parseInt(item.count);
+          total      += parseFloat(item.total_price);
+          totalCount += parseInt(item.count);
+          wrap.insertAdjacentHTML("beforeend",`
+            <div class="cart-card">
+              <p>菜品 ID：${item.dish_id}</p>
+              <p>
+                数量：
+                <button onclick="changeCount(${item.cart_id}, ${item.count - 1})">-</button>
+                <span id="count-${item.cart_id}">${item.count}</span>
+                <button onclick="changeCount(${item.cart_id}, ${item.count + 1})">+</button>
+              </p>
+              <p>小计：¥<span id="subtotal-${item.cart_id}">${parseFloat(item.total_price).toFixed(2)}</span></p>
+            </div>`);
+        });
+
+        document.getElementById("total-price").innerText = "¥" + total.toFixed(2);
+        countS.innerText = totalCount;
+      } catch (e) {
+        document.getElementById("cart-items").innerHTML = `<p>加载失败：${e.message}</p>`;
+      }
+    }
+
+    async function changeCount(cartId, newCount) {
+      try {
+        if (newCount < 1) {
+          const fd = new FormData();
+          fd.append("cart_id", cartId);
+          await fetch(BASE_API + "carts/delete.php", { method:"POST", body:fd });
+        } else {
+          const fd = new FormData();
+          fd.append("cart_id", cartId);
+          fd.append("count", newCount);
+          await fetch(BASE_API + "carts/update_count.php", { method:"POST", body:fd });
+        }
+        loadCart();
+      } catch(e) {
+        alert("更新失败：" + e.message);
+      }
+    }
+
+    async function checkout() {
+      if (cartData.length === 0) { alert("购物车为空！"); return; }
+
+      const address = prompt("请输入收货地址");
+      if (!address) return;
+
+      const merchantId = cartData[0].merchant_id;
+      const totalPrice = cartData.reduce((sum, i) => sum + parseFloat(i.total_price), 0);
+
+      try {
+        const orderFD = new FormData();
+        orderFD.append("customer_id", customerId);
+        orderFD.append("merchant_id", merchantId);
+        orderFD.append("address", address);
+        orderFD.append("total_price", totalPrice.toFixed(2));
+
+        const orderRes  = await fetch(BASE_API + "orders/create.php", { method: "POST", body: orderFD });
+        const orderJson = await orderRes.json();
+        console.log("订单创建响应：", orderJson);
+
+        // 修改这里的判断逻辑
+        const isSuccess = orderJson.success === true || orderJson.success === "true" || orderJson.message === "下单成功";
+        const hasOrderId = !!orderJson.order_id;
+
+        if (!isSuccess || !hasOrderId) {
+          throw new Error("订单提交失败：" + (orderJson.message || "未知错误"));
+        }
+
+        const orderId = orderJson.order_id;
+
+        for (const item of cartData) {
+          const detFD = new FormData();
+          detFD.append("order_id", orderId);
+          detFD.append("dish_id", item.dish_id);
+          detFD.append("count", item.count);
+          detFD.append("total_price", item.total_price);
+          await fetch(BASE_API + "order_dish_detail/create.php", { method: "POST", body: detFD });
+
+          const delFD = new FormData();
+          delFD.append("cart_id", item.cart_id);
+          await fetch(BASE_API + "carts/delete.php", { method: "POST", body: delFD });
+        }
+
+        alert("下单成功，订单号：" + orderId);
+        window.location.href = "order.html?from=checkout";
+      } catch (e) {
+        console.error("下单异常：", e);
+        alert("下单失败：" + e.message);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadCart);
+  </script>
+</body>
+</html>
