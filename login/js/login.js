@@ -49,24 +49,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 保存用户信息
                 localStorage.setItem('currentUser', JSON.stringify(result));
 
-                let user_type = 0;
-                try {
-                    const user_id_data = new FormData();
-                    user_id_data.append('user_id', result.user_id);
-                    const user_id_response = await fetch(BASE_API_URL + 'users/get.php', {
-                        method: 'POST',
-                        body: user_id_data
-                    });
-                    const user_id_result = await user_id_response.json();
-                    if (user_id_response.ok) {
-                        user_type = user_id_result.user.type;
-                    }
-                } catch (error) {
-                    console.error('获取用户类型失败：', error);
-                }
-
                 // 根据类型跳转
-                switch (user_type) {
+                switch (result.type) {
                     case 0:
                         window.location.href = '../customer/dashboard.html';
                         break;

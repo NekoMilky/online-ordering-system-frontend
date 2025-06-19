@@ -11,20 +11,26 @@
       background-color: #f5f5f5;
     }
 
-    .app-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-    .navbar {
-      background-color: #ff6b6b;
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      padding: 1rem;
-      align-items: center;
-    }
+.navbar {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.main-content {
+    padding: 2rem;
+    flex: 1;
+}
 
     .navbar .logo {
       font-size: 1.5rem;
@@ -63,10 +69,6 @@
 
     .nav-item:hover {
       text-decoration: underline;
-    }
-
-    .main-content {
-      margin-top: 2rem;
     }
 
     h1 {
@@ -129,6 +131,7 @@
   </style>
 </head>
 <body>
+  <div class="app-container">
     <nav class="navbar">
       <div class="logo">美食外卖 - 商家</div>
       <div class="nav-items nav-links">
@@ -136,7 +139,6 @@
         <div id="user-auth"></div>
       </div>
     </nav>
-  <div class="app-container">
     <div class="main-content">
       <h1>添加新菜品</h1>
       <form id="add-dish-form" class="dish-form">

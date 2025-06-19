@@ -76,6 +76,20 @@ body {
   background: rgba(255, 255, 255, 0.4);
 }
 
+.nav-links button {
+  border: none;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.nav-links button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 /* 按钮通用样式 */
 .btn-primary, .btn-action {
     background-color: #ff6b6b;

@@ -7,15 +7,28 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: "微软雅黑", sans-serif; }
     body { background-color: #f9f9f9; }
-    .app-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .navbar {
-      background-color: #ff6b6b;
-      color: white;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.navbar {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.main-content {
+    padding: 2rem;
+    flex: 1;
+}
+
     .logo { font-size: 1.5rem; font-weight: bold; }
     .nav-items .user-profile { font-size: 1rem; }
     h1 { margin: 20px 0; color: #333; }
@@ -151,6 +164,7 @@
   </style>
 </head>
 <body>
+  <div class="app-container">
     <nav class="navbar">
       <div class="logo">美食外卖 - 商家</div>
       <div class="nav-items nav-links">
@@ -158,7 +172,6 @@
         <div id="user-auth"></div>
       </div>
     </nav>
-  <div class="app-container">
     <div class="main-content">
       <h1>菜品管理</h1>
       <button id="add-dish-btn" class="btn-primary">添加新菜品</button>

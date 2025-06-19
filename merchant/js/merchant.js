@@ -241,3 +241,10 @@ async function modifyDish(formData) {
     return null;
   }
 }
+
+// 登出
+function logOut() {
+    localStorage.removeItem('currentUser');
+    alert('您已退出登录');
+    window.location.href = '../index.html';
+}

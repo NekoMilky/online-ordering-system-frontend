@@ -70,6 +70,19 @@
       margin-bottom: 1rem;
     }
 
+    .nav-links a {
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.nav-links a:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
     .hero-section p {
       font-size: 1.1rem;
       margin-bottom: 2rem;
@@ -125,7 +138,7 @@
         <img src="images/logo.png" alt="logo" style="width: 50px;" />
         <span>美食外卖</span>
       </div>
-      <div class="nav-items" id="user-auth">
+      <div class="nav-items nav-links" id="user-auth">
         <!-- 登录/注册/用户中心 按钮将通过 JS 加载 -->
       </div>
     </nav>
@@ -181,8 +194,7 @@
     } else {
       // 未登录用户的主页内容
       userAuthElement.innerHTML = `
-        <a href="login/login.html" class="auth-button">登录</a>
-        <a href="login/register.html" class="auth-button">注册</a>
+        <a href="login/login.html" class="auth-button">登录/注册</a>
       `;
 
       heroSection.innerHTML = `

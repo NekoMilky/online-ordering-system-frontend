@@ -13,6 +13,8 @@
         <a href="profile.html" class="nav-item">个人中心</a>
         <a href="cart.html" class="nav-item">购物车</a>
         <a href="order.html" class="nav-item">我的订单</a>
+        <div id="user-auth"><span>顾客</span></div>
+        <button onclick="logOut()">登出</button>
       </div>
     </nav>
   <div class="app-container">
@@ -66,6 +68,10 @@
 
     // 加载用户名
     async function loadUserName() {
+        const userAuthElement = document.getElementById('user-auth');
+        if (userAuthElement && currentUser?.nick) {
+            userAuthElement.innerHTML = `<div class="user-profile"><span>登录为：${currentUser.nick}</span></div>`;
+        }
         const container = document.getElementById('welcome-bar');
         try {
             const formData = new FormData();
@@ -177,6 +183,13 @@ function getOrderStatusText(status) {
       loadRecommendedRestaurants();
       loadRecentOrders();
     });
+
+// 登出
+function logOut() {
+    localStorage.removeItem('currentUser');
+    alert('您已退出登录');
+    window.location.href = '../index.html';
+}
   </script>
 </body>
 </html>

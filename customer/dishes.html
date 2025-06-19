@@ -7,24 +7,14 @@
   <link rel="stylesheet" href="css/customer.css" />
 </head>
 <body>
-  <div class="app-container">
     <nav class="navbar">
       <div class="logo">美食外卖</div>
-      <div class="nav-items">
-        <div id="user-auth">
-        </div>
-        <a href="dashboard.html" id="cart-btn" class="nav-item">主页</a>
-        <a href="cart.html" id="cart-btn" class="nav-item">
-          <i class="icon-cart"></i> 购物车 (<span id="cart-count">0</span>)
-        </a>
-        <a href="order.html" class="nav-item">
-          <i class="icon-orders"></i> 我的订单
-        </a>
+      <div class="nav-items nav-links">
+        <a href="dashboard.html" id="cart-btn" class="nav-item">仪表盘</a>
       </div>
     </nav>
-
+  <div class="app-container">
     <main class="main-content">
-      <a href="restaurants.html" class="back-button">← 返回餐厅列表</a>
       <h1>菜品浏览</h1>
       <div id="dishes-list" class="dishes-list">
         <div class="loading">加载中...</div>
