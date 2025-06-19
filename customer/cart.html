@@ -97,7 +97,6 @@
         });
 
         document.getElementById("total-price").innerText = "¥" + total.toFixed(2);
-        countS.innerText = totalCount;
       } catch (e) {
         document.getElementById("cart-items").innerHTML = `<p>加载失败：${e.message}</p>`;
       }

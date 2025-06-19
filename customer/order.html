@@ -281,10 +281,8 @@ function bindConfirmButtons() {
       if (confirm('确定要确认收货吗？')) {
         try {
           const success = await updateOrderStatus(orderId, 2);
-          if (success) {
-            alert('订单已完成！');
-            loadOrders('active'); // 刷新订单列表
-          }
+          alert('订单已完成！');
+          window.location.href = 'order.html';
         } catch (error) {
           alert('操作失败: ' + error.message);
         }
