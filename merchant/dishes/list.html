@@ -246,7 +246,7 @@
       modal.style.display = 'none';
     });
 
-    // 修改 loadDishList 函数，移除修改按钮
+    // 修改 loadDishList 函数
     async function loadDishList() {
       const tbody = document.getElementById('dishes-table-body');
       tbody.innerHTML = '<tr><td colspan="6">加载中...</td></tr>';
@@ -264,7 +264,6 @@
           return;
         }
 
-        // 移除修改按钮
         tbody.innerHTML = dishes.map(dish => `
           <tr>
             <td>${dish.dish_id}</td>
@@ -273,6 +272,7 @@
             <td>¥${parseFloat(dish.price).toFixed(2)}</td>
             <td>${dish.description || ''}</td>
             <td>
+              <button class="modify-btn" onclick="goToModifyPage(${dish.dish_id})">修改</button>
               <button class="delete-btn" onclick="deleteDish(${dish.dish_id})">删除</button>
             </td>
           </tr>
@@ -304,6 +304,10 @@
       } catch (err) {
         alert('请求失败：' + err.message);
       }
+    }
+
+    function goToModifyPage(dishId) {
+      window.location.href = `modify.html?dishId=${dishId}`;
     }
   </script>
 </body>
